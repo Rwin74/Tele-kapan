@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 2%; /* Pit Noir / Deep Carbon */
+    --foreground: 0 0% 95%; /* Clean Silver */
+
+    --card: 0 0% 5%; /* Charcoal Dark */
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 153 78% 48%; /* Cyber Emerald / Matrix Green */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 12%; 
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 153 78% 48%; 
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84% 60%; /* Bright Red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 15%; /* Distinct sharp lines */
+    --input: 0 0% 10%;
+    --ring: 153 78% 48%;
+
+    --radius: 0.35rem; /* Sharper edges */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/50 selection:text-black;
+    /* Cyber/Tech Grid Background pattern */
+    background-image: 
+      linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-black/60 backdrop-blur-xl border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)];
+  }
+  .glass-card {
+    @apply bg-[#0c0c0c]/80 backdrop-blur-md border border-[#2a2a2a] shadow-2xl;
+  }
+  .glass-panel {
+    @apply bg-[#050505]/95 backdrop-blur-3xl border-r border-[#1a1a1a];
+  }
+  .fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
