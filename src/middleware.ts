@@ -10,16 +10,26 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   
   // 3. Ortama göre ana domain belirleme (PRODUCTION vs LOCAL)
-  // TODO: Production'da 'sitemiz.com' yerine kendi gerçek alan adınızı yazın.
+  // Gerçek alan adınız (bunu ortam değişkenlerine ekleyebilirsiniz NEXT_PUBLIC_ROOT_DOMAIN olarak)
   const isLocalhost = hostname.includes('localhost');
-  const mainDomain = isLocalhost ? 'localhost:3000' : 'sitemiz.com'; 
+  const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || (isLocalhost ? 'localhost:3000' : 'sitemiz.com'); 
   
   // 4. Subdomain'i çözümle
-  let currentHost = hostname.replace(`.${mainDomain}`, '');
-  
-  // Eğer port varsa veya sadece mainDomain girilmişse (örn: sitemiz.com)
-  if (currentHost === mainDomain || currentHost === "") {
-     currentHost = "app"; // Ana sitemiz 'app' olsun
+  let currentHost = hostname;
+
+  // Eğer Vercel'in kendi ana URL'si üzerinden doğrudan giriş yapılıyorsa (tele-kapan.vercel.app gibi)
+  // Ve özel bir custom domain kullanılmıyorsa bunu ana site olarak kabul et.
+  if (hostname.endsWith('.vercel.app') && !hostname.includes('.' + mainDomain)) {
+      // Vercel domainleri genellikle ana app olur (subdomain custom domain ile yapılır)
+      // Ancak ilerde Vercel wildcard eklerseniz burayı iptal edebilirsiniz.
+      currentHost = 'app';
+  } else {
+    // Custom domain veya localhost üzerinden geliyorsa tenant'ı çözümle
+    currentHost = hostname.replace(`.${mainDomain}`, '');
+    // Eğer port varsa veya sadece mainDomain girilmişse (örn: sitemiz.com, localhost:3000)
+    if (currentHost === mainDomain || currentHost === "") {
+       currentHost = "app"; 
+    }
   }
 
   // 5. Belirli rotalar için rewrite etme (Ana site veya özel paneller)

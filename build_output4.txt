@@ -1,0 +1,67 @@
+﻿
+> temp-dir@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.3
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/panel/ayarlar/page.tsx
+21:6  Warning: React Hook useEffect has missing dependencies: 'fetchDevices' and 'isOwner'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/panel/satim/takas/page.tsx
+252:34  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+252:34  Warning: img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/app/panel/satim/yeni/page.tsx
+195:34  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+195:34  Warning: img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/app/panel/stok/client.tsx
+265:24  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/panel/stok/yeni/page.tsx
+300:22  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+330:34  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+330:34  Warning: img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/16) ...
+   Generating static pages (4/16) 
+   Generating static pages (8/16) 
+   Generating static pages (12/16) 
+ Ô£ô Generating static pages (16/16)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Ôöî Ôùï /                                    143 B          87.5 kB
+Ôö£ Ôùï /_not-found                          875 B          88.2 kB
+Ôö£ ãÆ /[tenant]                            143 B          87.5 kB
+Ôö£ Ôùï /activate                            2.34 kB         152 kB
+Ôö£ ãÆ /admin                               143 B          87.5 kB
+Ôö£ Ôùï /login                               3.89 kB         173 kB
+Ôö£ ãÆ /panel                               955 B          88.3 kB
+Ôö£ Ôùï /panel/ayarlar                       3.26 kB         172 kB
+Ôö£ ãÆ /panel/raporlar                      955 B          88.3 kB
+Ôö£ ãÆ /panel/satim                         4.19 kB         192 kB
+Ôö£ Ôùï /panel/satim/takas                   7.05 kB         387 kB
+Ôö£ Ôùï /panel/satim/yeni                    5.88 kB         386 kB
+Ôö£ ãÆ /panel/stok                          5.58 kB         230 kB
+Ôö£ Ôùï /panel/stok/yeni                     47.1 kB         463 kB
+Ôöö Ôùï /pending-approval                    2.71 kB         162 kB
++ First Load JS shared by all            87.3 kB
+  Ôö£ chunks/23-3c778ae68e4fdb6b.js        31.6 kB
+  Ôö£ chunks/fd9d1056-74562d7ad4f1bbd2.js  53.6 kB
+  Ôöö other shared chunks (total)          2.07 kB
+
+
+ãÆ Middleware                             80.1 kB
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

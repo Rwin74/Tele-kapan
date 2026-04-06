@@ -1,0 +1,173 @@
+﻿
+> temp-dir@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.3
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nod
+ejs/node.exe" "C:\Program
+ Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpecified:   
+  (:String) [], Remote   
+ Exception
+    + FullyQualifiedErro 
+   rId : NativeCommandE  
+  rror
+ 
+Failed to compile.
+
+./src/app/panel/ayarlar/p
+age.tsx
+21:6  Warning: React Hook
+ useEffect has missing de
+pendencies: 'fetchDevices
+' and 'isOwner'. Either i
+nclude them or remove the
+ dependency array.  react
+-hooks/exhaustive-deps
+
+./src/app/panel/satim/tak
+as/page.tsx
+252:34  Warning: Using `<
+img>` could result in slo
+wer LCP and higher bandwi
+dth. Consider using `<Ima
+ge />` from `next/image` 
+to automatically optimize
+ images. This may incur a
+dditional usage or cost f
+rom your provider. See: h
+ttps://nextjs.org/docs/me
+ssages/no-img-element  @n
+ext/next/no-img-element
+252:34  Warning: img elem
+ents must have an alt pro
+p, either with meaningful
+ text, or an empty string
+ for decorative images.  
+jsx-a11y/alt-text
+307:49  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+307:63  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+308:34  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+308:47  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+
+./src/app/panel/satim/yen
+i/page.tsx
+195:34  Warning: Using `<
+img>` could result in slo
+wer LCP and higher bandwi
+dth. Consider using `<Ima
+ge />` from `next/image` 
+to automatically optimize
+ images. This may incur a
+dditional usage or cost f
+rom your provider. See: h
+ttps://nextjs.org/docs/me
+ssages/no-img-element  @n
+ext/next/no-img-element
+195:34  Warning: img elem
+ents must have an alt pro
+p, either with meaningful
+ text, or an empty string
+ for decorative images.  
+jsx-a11y/alt-text
+
+./src/app/panel/stok/clie
+nt.tsx
+265:24  Warning: Using `<
+img>` could result in slo
+wer LCP and higher bandwi
+dth. Consider using `<Ima
+ge />` from `next/image` 
+to automatically optimize
+ images. This may incur a
+dditional usage or cost f
+rom your provider. See: h
+ttps://nextjs.org/docs/me
+ssages/no-img-element  @n
+ext/next/no-img-element
+
+./src/app/panel/stok/yeni
+/page.tsx
+300:22  Warning: Using `<
+img>` could result in slo
+wer LCP and higher bandwi
+dth. Consider using `<Ima
+ge />` from `next/image` 
+to automatically optimize
+ images. This may incur a
+dditional usage or cost f
+rom your provider. See: h
+ttps://nextjs.org/docs/me
+ssages/no-img-element  @n
+ext/next/no-img-element
+330:34  Warning: Using `<
+img>` could result in slo
+wer LCP and higher bandwi
+dth. Consider using `<Ima
+ge />` from `next/image` 
+to automatically optimize
+ images. This may incur a
+dditional usage or cost f
+rom your provider. See: h
+ttps://nextjs.org/docs/me
+ssages/no-img-element  @n
+ext/next/no-img-element
+330:34  Warning: img elem
+ents must have an alt pro
+p, either with meaningful
+ text, or an empty string
+ for decorative images.  
+jsx-a11y/alt-text
+364:82  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+364:97  Error: `"` can be
+ escaped with `&quot;`, `
+&ldquo;`, `&#34;`, `&rdqu
+o;`.  react/no-unescaped-
+entities
+364:104  Error: `"` can b
+e escaped with `&quot;`, 
+`&ldquo;`, `&#34;`, `&rdq
+uo;`.  react/no-unescaped
+-entities
+364:114  Error: `"` can b
+e escaped with `&quot;`, 
+`&ldquo;`, `&#34;`, `&rdq
+uo;`.  react/no-unescaped
+-entities
+
+info  - Need to disable s
+ome ESLint rules? Learn m
+ore here: https://nextjs.
+org/docs/basic-features/e
+slint#disabling-rules
