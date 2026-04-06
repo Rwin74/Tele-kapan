@@ -361,7 +361,7 @@ export default function YeniCihazPage() {
           <div style={{ marginTop: '40px', fontSize: '12px', lineHeight: '1.6', color: '#222', border: '1px solid #ddd', padding: '15px' }}>
             <strong>İkinci El Alım-Satım Sözleşmesi ve KVKK Açık Rıza Beyanı:</strong><br /><br />
             Yukarıda marka, model ve seri (IMEI) numarası belirtilen iletişim cihazının mülkiyeti tarafıma ait iken, hür irademle <strong>{shop?.name || 'isimli mağazaya'}</strong> satışını ve devrini gerçekleştirdim. 
-            Bu cihazın daha önce herhangi bir yasadışı işlemde kullanılmadığını, "hırsızlık malı" veya "kayıtdışı" olmadığını, yurtiçi kullanım kurallarına uyduğunu kabul ederim. Cihazın her türlü idari, adli ve hukuki sorumluluğunun satış tarihine kadar bana ait olduğunu beyan ve taahhüt ederim.<br /><br />
+            Bu cihazın daha önce herhangi bir yasadışı işlemde kullanılmadığını, &quot;hırsızlık malı&quot; veya &quot;kayıtdışı&quot; olmadığını, yurtiçi kullanım kurallarına uyduğunu kabul ederim. Cihazın her türlü idari, adli ve hukuki sorumluluğunun satış tarihine kadar bana ait olduğunu beyan ve taahhüt ederim.<br /><br />
             KVKK kapsamında (6698 sayılı kanun) şahsıma ait kimlik, isim ve iletişim bilgilerince resmi denetim kurumlarına ve adli makamlara dükkan sahibince teslim edilebilmesine <strong>Açık Rızam</strong> vardır. Cihaz bedelini nakden veya banka aracılığıyla eksiksiz olarak tahsil ettim.
           </div>
 

@@ -304,8 +304,8 @@ export default function TakasPage() {
 
           <div style={{ marginTop: '40px', fontSize: '11px', lineHeight: '1.5', color: '#444' }}>
             <strong>Takas ve KVKK Açık Rıza Sözleşmesi:</strong><br />
-            1) Müşteri (Satıcı/Alıcı), yukarıda "Verdiği Cihaz" başlığı altında tanımlanan cihazı mülkiyeti kendisine ait iken kendi hür iradesiyle Mağazaya devrettiğini; bu cihazın çalıntı/kayıtdışı olmadığını ve geçmiş kullanımdan doğacak tüm (adli/idari/TR yasal) sorumluluğun kendisine ait olduğunu beyan ve taahhüt eder.<br />
-            2) Müşteri, yukarıda "Aldığı Cihaz" başlığı altındaki cihazı belirtilen değer ve çalışma durumunu bilerek (test ederek) teslim almıştır.<br />
+            1) Müşteri (Satıcı/Alıcı), yukarıda &quot;Verdiği Cihaz&quot; başlığı altında tanımlanan cihazı mülkiyeti kendisine ait iken kendi hür iradesiyle Mağazaya devrettiğini; bu cihazın çalıntı/kayıtdışı olmadığını ve geçmiş kullanımdan doğacak tüm (adli/idari/TR yasal) sorumluluğun kendisine ait olduğunu beyan ve taahhüt eder.<br />
+            2) Müşteri, yukarıda &quot;Aldığı Cihaz&quot; başlığı altındaki cihazı belirtilen değer ve çalışma durumunu bilerek (test ederek) teslim almıştır.<br />
             3) KVKK (6698) uyarınca şahsıma ait kimlik ve iletişim bilgilerinin, yetkili adli birimlerin cihaz sorgu taleplerinde kullanılabilmesi için işlenmesine AÇIK RIZAM vardır.<br />
             4) Hesap özetinde belirtilen tutar eksiksiz olarak taraflarca tahsil/teslim edilerek mutabakata varılmıştır. 
           </div>
