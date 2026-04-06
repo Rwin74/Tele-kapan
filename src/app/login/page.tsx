@@ -97,7 +97,7 @@ export default function LoginPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 text-primary">
             <LockKeyhole className="h-7 w-7" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Tele-Kapan'a Giriş</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">Tele-Kapan&apos;a Giriş</CardTitle>
           <CardDescription className="text-white/60">
             Dükkanınızı yönetmek için bilgilerinizi girin.
           </CardDescription>
