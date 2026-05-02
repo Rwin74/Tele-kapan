@@ -14,7 +14,7 @@ export default async function StokPage() {
       *,
       users:added_by (full_name)
     `)
-    .eq('status', 'in_stock')
+    .in('status', ['in_stock', 'sold'])
     .order('created_at', { ascending: false })
 
   // Also get the user role to conditionally hide cost for Staff

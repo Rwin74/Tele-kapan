@@ -17,6 +17,8 @@ interface ShopDetails {
   logo_url: string | null
   address: string | null
   tax_info: string | null
+  default_store_name: string | null
+  use_as_default_owner: boolean | null
 }
 
 interface AppState {

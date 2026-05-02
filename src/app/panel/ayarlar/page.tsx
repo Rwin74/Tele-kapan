@@ -10,9 +10,20 @@ import { Settings2, ShieldCheck, Trash2 } from 'lucide-react'
 
 export default function AyarlarPage() {
   const supabase = createClient()
-  const { shop, user } = useAppStore()
+  const { shop, user, setShop } = useAppStore()
   const [devices, setDevices] = useState<any[]>([])
   const isOwner = user?.role === 'owner' || user?.role === 'super_admin'
+
+  const [defaultStoreName, setDefaultStoreName] = useState(shop?.default_store_name || '')
+  const [useAsDefaultOwner, setUseAsDefaultOwner] = useState(shop?.use_as_default_owner || false)
+  const [loadingSettings, setLoadingSettings] = useState(false)
+
+  useEffect(() => {
+    if (shop) {
+      setDefaultStoreName(shop.default_store_name || '')
+      setUseAsDefaultOwner(shop.use_as_default_owner || false)
+    }
+  }, [shop])
 
   useEffect(() => {
     if (shop?.id && isOwner) {
@@ -44,6 +55,30 @@ export default function AyarlarPage() {
     }
   }
 
+  const updateStoreSettings = async () => {
+    if (!shop?.id) return
+    setLoadingSettings(true)
+    const { error } = await supabase
+      .from('shops')
+      .update({
+        default_store_name: defaultStoreName,
+        use_as_default_owner: useAsDefaultOwner
+      })
+      .eq('id', shop.id)
+      
+    setLoadingSettings(false)
+    if (error) {
+      toast.error('Ayarlar güncellenemedi: ' + error.message)
+    } else {
+      toast.success('Ayarlar başarıyla kaydedildi.')
+      setShop({
+        ...shop,
+        default_store_name: defaultStoreName,
+        use_as_default_owner: useAsDefaultOwner
+      })
+    }
+  }
+
   return (
     <div className="space-y-8 fade-in max-w-4xl">
       <div>
@@ -60,7 +95,7 @@ export default function AyarlarPage() {
           <CardDescription className="text-white/50">Şirketinizin genel unvan ve adres detayları.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <span className="text-white/50 block">Dükkan Adı</span>
               <span className="text-white font-medium">{shop?.name}</span>
@@ -78,6 +113,44 @@ export default function AyarlarPage() {
       </Card>
 
       {isOwner && (
+        <Card className="glass-card border-white/5 border-emerald-500/20">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-emerald-500" />
+              Varsayılan Mağaza Cihazı Ayarları
+            </CardTitle>
+            <CardDescription className="text-white/50">Cihaz eklerken varsayılan olarak kendi dükkanınızı satıcı olarak ayarlayın.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-white/80 text-sm">Varsayılan Dükkan Adı (Sözleşmeler için)</label>
+              <input 
+                value={defaultStoreName} 
+                onChange={e => setDefaultStoreName(e.target.value)} 
+                className="flex h-10 w-full rounded-md border border-[#222] bg-[#0f0f0f] px-3 py-2 text-sm text-white placeholder:text-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" 
+                placeholder="Örn: Benim Mağazam İletişim"
+              />
+            </div>
+            <div className="flex items-center gap-3 py-2">
+              <input 
+                type="checkbox" 
+                id="useAsDefault" 
+                checked={useAsDefaultOwner} 
+                onChange={e => setUseAsDefaultOwner(e.target.checked)} 
+                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-emerald-500 focus:ring-emerald-500"
+              />
+              <label htmlFor="useAsDefault" className="text-white/80 text-sm cursor-pointer select-none">
+                Yeni cihaz eklerken "Mağaza Cihazı" olarak işaretle
+              </label>
+            </div>
+            <Button onClick={updateStoreSettings} disabled={loadingSettings} className="bg-emerald-500 hover:bg-emerald-400 text-black">
+              {loadingSettings ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {isOwner && (
         <Card className="glass-card border-white/5 border-primary/20">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
@@ -93,7 +166,7 @@ export default function AyarlarPage() {
               {devices.length === 0 ? (
                 <div className="text-white/50 text-sm">Hiçbir cihaz kaydı bulunamadı.</div>
               ) : devices.map(device => (
-                <div key={device.id} className="flex items-center justify-between p-4 rounded-lg bg-black/40 border border-white/5">
+                <div key={device.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg bg-black/40 border border-white/5 gap-4">
                   <div>
                     <p className="text-white font-medium">{device.users?.full_name} <span className="text-xs text-white/50 uppercase ml-2 px-2 py-0.5 rounded bg-white/10">{device.users?.role}</span></p>
                     <p className="text-xs text-white/50 mt-1">Cihaz ID: {device.device_identifier.split('-')[0]}***</p>

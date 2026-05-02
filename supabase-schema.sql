@@ -13,6 +13,8 @@ CREATE TABLE public.shops (
     is_active BOOLEAN DEFAULT true,
     address TEXT,
     tax_info TEXT, -- VKN / Vergi Dairesi
+    default_store_name TEXT,
+    use_as_default_owner BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -52,6 +54,16 @@ CREATE TABLE public.inventory (
     total_cost NUMERIC(10,2) DEFAULT 0,
     status TEXT DEFAULT 'in_stock' CHECK (status IN ('in_stock', 'sold', 'returned', 'scrapped')),
     device_origin TEXT,
+    seller_name TEXT,
+    seller_tc TEXT,
+    seller_phone TEXT,
+    photos TEXT[],
+    is_store_device BOOLEAN DEFAULT false,
+    store_name TEXT,
+    sale_price NUMERIC(10,2),
+    profit NUMERIC(10,2),
+    is_sold BOOLEAN DEFAULT false,
+    sold_at TIMESTAMPTZ,
     added_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -107,12 +119,16 @@ CREATE TRIGGER trigger_add_expense
 AFTER INSERT ON public.expenses
 FOR EACH ROW EXECUTE PROCEDURE public.update_inventory_cost_on_expense();
 
--- B. Cihaz Satıldığında -> Stok'un (inventory) status değerini 'sold' yap
+-- B. Cihaz Satıldığında -> Stok'un (inventory) status değerini 'sold' yap ve profit hesapla
 CREATE OR REPLACE FUNCTION public.mark_inventory_sold()
 RETURNS TRIGGER AS $$
 BEGIN
     UPDATE public.inventory
-    SET status = 'sold'
+    SET status = 'sold',
+        is_sold = true,
+        sold_at = NEW.sale_date,
+        sale_price = NEW.sale_price,
+        profit = NEW.sale_price - purchase_price
     WHERE id = NEW.inventory_id;
     RETURN NEW;
 END;
@@ -299,3 +315,25 @@ FOR INSERT WITH CHECK (shop_id = public.get_auth_user_shop_id());
 
 CREATE POLICY "Only owners can delete returns" ON public.returns
 FOR DELETE USING (shop_id = public.get_auth_user_shop_id() AND public.get_auth_user_role() = 'owner');
+
+-- 5. STORAGE BUCKETS & POLICIES
+-- Create 'device-images' bucket for uploading device photos
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('device-images', 'device-images', true) 
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public Access for device-images" 
+ON storage.objects FOR SELECT 
+USING ( bucket_id = 'device-images' );
+
+CREATE POLICY "Auth Insert for device-images" 
+ON storage.objects FOR INSERT 
+WITH CHECK ( bucket_id = 'device-images' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Auth Update for device-images" 
+ON storage.objects FOR UPDATE 
+USING ( bucket_id = 'device-images' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Auth Delete for device-images" 
+ON storage.objects FOR DELETE 
+USING ( bucket_id = 'device-images' AND auth.role() = 'authenticated' );

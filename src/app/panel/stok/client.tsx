@@ -26,6 +26,10 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
   const [repairPhotos, setRepairPhotos] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   
+  // Satış States
+  const [sellDialogId, setSellDialogId] = useState<string | null>(null)
+  const [sellPriceInput, setSellPriceInput] = useState('')
+  
   const [loading, setLoading] = useState(false)
   
   const router = useRouter()
@@ -137,14 +141,82 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
     }
   }
 
+  const handleMarkAsSold = async () => {
+    if (!sellDialogId) return
+    const amount = parseFloat(sellPriceInput)
+    if (isNaN(amount) || amount <= 0) return toast.error("Geçerli bir satış fiyatı girin.")
+
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { error } = await supabase.from('sales').insert({
+        inventory_id: sellDialogId,
+        shop_id: shopId,
+        sold_by: user?.id,
+        sale_price: amount,
+        payment_method: 'Nakit/Diğer (Hızlı Satış)',
+        customer_name: 'Hızlı Satış',
+        customer_tc: '-',
+        customer_phone: '-'
+      })
+
+      if (error) throw error
+
+      toast.success('Cihaz satıldı olarak işaretlendi!')
+      
+      setData(prev => prev.map(item => {
+        if (item.id === sellDialogId) {
+          return {
+            ...item,
+            status: 'sold',
+            is_sold: true,
+            sale_price: amount,
+            profit: amount - item.purchase_price
+          }
+        }
+        return item
+      }))
+      
+      setSellDialogId(null)
+      setSellPriceInput('')
+    } catch (err: any) {
+      toast.error(err.message || 'Hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filtered = data.filter(item => 
     item.brand.toLowerCase().includes(search.toLowerCase()) || 
     item.model.toLowerCase().includes(search.toLowerCase()) ||
     item.imei_1?.includes(search)
   )
 
+  const totalDevices = data.length
+  const totalSold = data.filter(item => item.status === 'sold').length
+  const totalProfit = data.filter(item => item.status === 'sold').reduce((sum, item) => sum + (item.profit || 0), 0)
+
   return (
     <div className="space-y-4">
+      {/* Özet Kartları */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+        <div className="glass-card bg-[#0a0a0a]/80 border-white/5 rounded-xl p-4">
+          <p className="text-white/50 text-sm mb-1">Toplam Cihaz</p>
+          <p className="text-2xl font-bold text-white">{totalDevices}</p>
+        </div>
+        <div className="glass-card bg-[#0a0a0a]/80 border-white/5 rounded-xl p-4">
+          <p className="text-white/50 text-sm mb-1">Satılan</p>
+          <p className="text-2xl font-bold text-emerald-400">{totalSold}</p>
+        </div>
+        {isOwner && (
+          <div className="glass-card bg-[#0a0a0a]/80 border-white/5 rounded-xl p-4 col-span-2 sm:col-span-1">
+            <p className="text-white/50 text-sm mb-1">Toplam Kâr</p>
+            <p className="text-2xl font-bold text-amber-400">{totalProfit} ₺</p>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-black/40 p-4 rounded-lg border border-white/5">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-emerald-500/50" />
@@ -162,14 +234,16 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
         </Link>
       </div>
 
-      <div className="border border-[#222] rounded-lg overflow-hidden glass-card">
-        <Table>
-          <TableHeader className="bg-[#050505]">
+      <div className="border border-[#222] rounded-lg glass-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader className="bg-[#050505]">
             <TableRow className="border-[#222]">
               <TableHead className="text-white/60">Marka / Model</TableHead>
               <TableHead className="text-white/60">IMEI</TableHead>
-              <TableHead className="text-white/60">Kondisyon / Kanıtlar</TableHead>
-              {isOwner && <TableHead className="text-white/60 text-right">Toplam Maliyet</TableHead>}
+              <TableHead className="text-white/60">Durum</TableHead>
+              {isOwner && <TableHead className="text-white/60 text-right">Alış / Toplam</TableHead>}
+              {isOwner && <TableHead className="text-white/60 text-right">Satış / Kâr</TableHead>}
               <TableHead className="text-white/60 text-right">İşlem</TableHead>
             </TableRow>
           </TableHeader>
@@ -191,18 +265,46 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
                   {item.imei_2 && <span className="text-white/50">{item.imei_2}</span>}
                 </TableCell>
                 <TableCell className="text-white/80 text-xs">
-                  %{item.battery_health || 100} Sağlık<br/>
-                  {item.photos && item.photos.length > 0 && (
-                     <span className="inline-flex items-center gap-1 text-emerald-400 mt-1"><ImageIcon className="w-3 h-3"/> {item.photos.length} Fotoğraf Yüklü</span>
-                  )}
+                   {item.status === 'sold' ? (
+                     <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border border-green-500/30">Satıldı</span>
+                   ) : (
+                     <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border border-yellow-500/30">Stokta</span>
+                   )}
                 </TableCell>
                 {isOwner && (
-                  <TableCell className="text-right font-bold text-white">
-                    {item.total_cost} ₺
+                  <TableCell className="text-right text-white text-xs">
+                    <span className="text-white/50 block">Alış: {item.purchase_price} ₺</span>
+                    <span className="font-bold">Maliyet: {item.total_cost} ₺</span>
+                  </TableCell>
+                )}
+                {isOwner && (
+                  <TableCell className="text-right text-white text-xs">
+                    {item.status === 'sold' ? (
+                      <>
+                        <span className="text-white/50 block">Satış: {item.sale_price} ₺</span>
+                        <span className="text-amber-400 font-bold tracking-wide">Kâr: {item.profit} ₺</span>
+                      </>
+                    ) : (
+                      <span className="text-white/30">-</span>
+                    )}
                   </TableCell>
                 )}
                 <TableCell className="text-right">
-                   <div className="flex items-center justify-end gap-2">
+                   <div className="flex items-center justify-end gap-2 flex-wrap sm:flex-nowrap">
+                     {item.status === 'in_stock' && (
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         onClick={() => {
+                           setSellDialogId(item.id)
+                           setSellPriceInput(item.sale_price ? String(item.sale_price) : '')
+                         }}
+                         className="bg-transparent border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 text-xs px-2"
+                         title="Satıldı Olarak İşaretle"
+                       >
+                         Satıldı İşaretle
+                       </Button>
+                     )}
                      <Button 
                        variant="outline" 
                        size="sm" 
@@ -228,6 +330,7 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <Dialog open={!!expenseDialogId} onOpenChange={(open) => !open && resetExpenseDialog()}>
@@ -276,6 +379,28 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
             <Button variant="ghost" onClick={resetExpenseDialog} className="text-white/70 hover:text-white hover:bg-white/5">İptal</Button>
             <Button onClick={handleAddExpense} disabled={loading || !expenseDesc || !expenseAmount} className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold">
               {loading ? 'Yükleniyor...' : 'Sisteme İşle'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Satış Dialog */}
+      <Dialog open={!!sellDialogId} onOpenChange={(open) => !open && setSellDialogId(null)}>
+        <DialogContent className="glass-card border-[#222] bg-[#0c0c0c] text-white sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400">Hızlı Satış Yap</DialogTitle>
+            <DialogDescription className="text-white/50">Cihazın satış fiyatını girin.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sell_amount" className="text-amber-400 font-bold">Satış Fiyatı (₺) *</Label>
+              <Input id="sell_amount" type="number" value={sellPriceInput} onChange={e => setSellPriceInput(e.target.value)} className="bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSellDialogId(null)} className="text-white/70 hover:text-white hover:bg-white/5">İptal</Button>
+            <Button onClick={handleMarkAsSold} disabled={loading || !sellPriceInput} className="bg-amber-500 hover:bg-amber-400 text-black font-bold">
+              {loading ? 'İşleniyor...' : 'Satıldı İşaretle'}
             </Button>
           </DialogFooter>
         </DialogContent>

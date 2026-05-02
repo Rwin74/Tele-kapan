@@ -46,10 +46,16 @@ export async function middleware(request: NextRequest) {
        // Orijinal pathname önüne subdomain'i ekliyoruz: /[tenant]/...
        url.pathname = `/${currentHost}${url.pathname}`;
        
-       // Sadece rewrite döneceğimiz için, supabaseSession'dan gelen headerları kaybetmemeliyiz.
-       return NextResponse.rewrite(url, {
-           headers: supabaseResponse.headers
+       const response = NextResponse.rewrite(url, {
+           request: { headers: request.headers }
        });
+
+       // Sadece rewrite döneceğimiz için, supabaseSession'dan gelen cookieleri kopyalamalıyız.
+       supabaseResponse.cookies.getAll().forEach((cookie) => {
+           response.cookies.set(cookie.name, cookie.value, cookie)
+       });
+
+       return response;
   }
 
   return supabaseResponse;

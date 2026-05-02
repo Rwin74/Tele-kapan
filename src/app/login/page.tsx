@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { checkDeviceApproval } from '@/app/actions/auth'
+
 import { useAppStore } from '@/store/useAppStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,17 +68,50 @@ export default function LoginPage() {
         }
 
         // Run Device Check
-        const deviceCheck = await checkDeviceApproval(profile.id, profile.shop_id)
-
-        if (deviceCheck.status === 'pending') {
-          toast.warning('Cihaz onayı bekleniyor. Lütfen yöneticiye başvurun.')
-          router.push('/pending-approval')
-          return
+        let deviceId = localStorage.getItem('tele_kapan_device_id')
+        
+        if (!deviceId) {
+           deviceId = crypto.randomUUID()
+           const { error: insertError } = await supabase.from('devices').insert({
+             user_id: profile.id,
+             shop_id: profile.shop_id,
+             device_identifier: deviceId,
+             is_approved: false
+           })
+           
+           if (insertError) {
+             throw new Error('Cihaz kaydı yapılamadı. ' + insertError.message)
+           }
+           
+           localStorage.setItem('tele_kapan_device_id', deviceId)
+           toast.warning('Cihaz onayı bekleniyor. Lütfen yöneticiye başvurun.')
+           router.push('/pending-approval')
+           return
         }
 
-        if (deviceCheck.status === 'error') {
-          throw new Error(deviceCheck.message)
+        // Device exists in localStorage, check approval
+        const { data: device, error: checkError } = await supabase
+          .from('devices')
+          .select('is_approved')
+          .eq('device_identifier', deviceId)
+          .single()
+
+        if (checkError || !device) {
+           localStorage.removeItem('tele_kapan_device_id')
+           throw new Error('Cihaz kaydı bulunamadı, lütfen tekrar giriş yapın.')
         }
+
+        if (!device.is_approved) {
+           toast.warning('Cihaz onayı bekleniyor. Lütfen yöneticiye başvurun.')
+           router.push('/pending-approval')
+           return
+        }
+
+        // Update last login
+        await supabase
+          .from('devices')
+          .update({ last_login: new Date().toISOString() })
+          .eq('device_identifier', deviceId)
 
         toast.success('Giriş başarılı, panele yönlendiriliyorsunuz.')
         router.push('/panel')

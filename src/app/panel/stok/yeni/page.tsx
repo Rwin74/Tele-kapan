@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -19,19 +19,25 @@ import { useDropzone } from 'react-dropzone'
 import imageCompression from 'browser-image-compression'
 import { generatePDF } from '@/lib/pdfGenerator'
 
+const cosmeticPresets = ["Kusursuz", "Kılcal Çizikler", "Kasa Vuruk", "Ekran Değişmiş", "Pil Değişmiş", "Arka Cam Kırık"];
+
 const formSchema = z.object({
   brand: z.string().min(1, 'Marka zorunludur.'),
   model: z.string().min(1, 'Model zorunludur.'),
+  storage: z.string().min(1, 'Hafıza seçilmelidir.'),
+  warranty_status: z.string().min(1, 'Garanti durumu seçilmelidir.'),
   imei_1: z.string().min(15, 'IMEI 1 en az 15 hane olmalıdır.').max(15, 'IMEI 1 15 haneyi geçemez.'),
   imei_2: z.string().max(15).optional(),
   battery_health: z.string().optional(),
   cosmetic_condition: z.string().optional(),
-  purchase_price: z.string().min(1, 'Alış fiyatı zorunludur.'),
+  purchase_price: z.string().optional(),
+  sale_price: z.string().optional(),
   
   // V1.1 Seller Info
-  seller_name: z.string().min(1, 'Satıcı isim zorunludur.'),
-  seller_tc: z.string().length(11, 'TC Kimlik numarası 11 hane olmak zorundadır.'),
-  seller_phone: z.string().min(10, 'Geçerli bir telefon giriniz.'),
+  seller_shop_name: z.string().optional(),
+  seller_name: z.string().optional(),
+  seller_tc: z.string().optional(),
+  seller_phone: z.string().optional(),
   
   // V1.1 Device Origin
   device_origin: z.string().min(1, 'Cihaz kökeni seçilmelidir.')
@@ -46,6 +52,13 @@ export default function YeniCihazPage() {
   const router = useRouter()
   const supabase = createClient()
   const { shop, user } = useAppStore()
+  const [isStoreDevice, setIsStoreDevice] = useState(false)
+
+  useEffect(() => {
+    if (shop?.use_as_default_owner) {
+      setIsStoreDevice(true)
+    }
+  }, [shop])
 
   const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
@@ -110,11 +123,34 @@ export default function YeniCihazPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!shop?.id) return toast.error('Dükkan bilgisi bulunamadı.')
+    
+    // Custom Validation
+    if (isStoreDevice) {
+      if (!values.purchase_price) return toast.error('Mağaza cihazları için Alış Fiyatı zorunludur.')
+    } else {
+      if (!values.seller_shop_name) return toast.error('Dükkan adı zorunludur.')
+      if (!values.seller_tc || values.seller_tc.length !== 11) return toast.error('T.C. Kimlik No 11 hane olmak zorundadır.')
+      if (!values.seller_phone || values.seller_phone.length < 10) return toast.error('Geçerli bir telefon giriniz.')
+    }
+
     setLoading(true)
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const price = parseFloat(values.purchase_price)
+      const price = values.purchase_price ? parseFloat(values.purchase_price) : 0
+      const salePrice = values.sale_price ? parseFloat(values.sale_price) : null
+      
+      let actualSellerShopName = values.seller_shop_name
+      let actualSellerName = values.seller_name
+      let actualSellerTc = values.seller_tc
+      let actualSellerPhone = values.seller_phone
+
+      if (isStoreDevice) {
+        actualSellerShopName = shop.default_store_name || shop.name
+        actualSellerName = ''
+        actualSellerTc = '-'
+        actualSellerPhone = '-'
+      }
       
       // Upload Images to Cloud
       const uploadedImageUrls = await uploadImages()
@@ -123,18 +159,21 @@ export default function YeniCihazPage() {
       const { data: insertedDevice, error } = await supabase.from('inventory').insert({
         shop_id: shop.id,
         brand: values.brand,
-        model: values.model,
+        model: `${values.model} (${values.storage})`,
         imei_1: values.imei_1,
         imei_2: values.imei_2 || null,
         battery_health: values.battery_health ? parseInt(values.battery_health) : null,
-        cosmetic_condition: values.cosmetic_condition || null,
+        cosmetic_condition: `Garanti: ${values.warranty_status}${values.cosmetic_condition ? ` | ${values.cosmetic_condition}` : ''}`,
         purchase_price: price,
         total_cost: price, // Initial total cost defaults to purchase price
+        sale_price: salePrice,
+        is_store_device: isStoreDevice,
+        store_name: isStoreDevice ? (shop.default_store_name || shop.name) : null,
         added_by: user?.id,
         status: 'in_stock',
-        seller_name: values.seller_name,
-        seller_tc: values.seller_tc,
-        seller_phone: values.seller_phone,
+        seller_name: `${actualSellerShopName}${actualSellerName ? ` (${actualSellerName})` : ''}`,
+        seller_tc: actualSellerTc,
+        seller_phone: actualSellerPhone,
         device_origin: values.device_origin,
         photos: uploadedImageUrls
       }).select().single()
@@ -170,17 +209,36 @@ export default function YeniCihazPage() {
         </div>
       </div>
 
+      <div className="flex items-center gap-3 py-2 bg-white/5 p-4 rounded-lg border border-white/10">
+        <input 
+          type="checkbox" 
+          id="isStoreDevice" 
+          checked={isStoreDevice} 
+          onChange={e => setIsStoreDevice(e.target.checked)} 
+          className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-emerald-500 focus:ring-emerald-500"
+        />
+        <label htmlFor="isStoreDevice" className="text-white font-medium cursor-pointer select-none">
+          Bu benim kendi cihazım (Mağaza Cihazı)
+        </label>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Satıcı Bilgileri (YASAL KALKAN) */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-white">1. Satıcı (Müşteri) Bilgileri</CardTitle>
-            <CardDescription className="text-white/50">Cihazı satın aldığınız kişinin resmi kayıtları.</CardDescription>
+        {!isStoreDevice && (
+          <Card className="glass-card">
+            <CardHeader>
+            <CardTitle className="text-white">1. Tedarikçi (B2B) Bilgileri</CardTitle>
+            <CardDescription className="text-white/50">Cihazı satın aldığınız dükkan ve yetkili kişi bilgileri.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-               <Label htmlFor="seller_name" className="text-white/80">Ad Soyad *</Label>
-               <Input id="seller_name" {...register('seller_name')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="Mustafa Yılmaz" />
+               <Label htmlFor="seller_shop_name" className="text-white/80">Dükkan Adı *</Label>
+               <Input id="seller_shop_name" {...register('seller_shop_name')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="Örn: Ahmet İletişim" />
+               {errors.seller_shop_name && <p className="text-red-400 text-xs">{errors.seller_shop_name.message}</p>}
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="seller_name" className="text-white/80">Ad Soyad (Opsiyonel)</Label>
+               <Input id="seller_name" {...register('seller_name')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="Teslim Eden Kişi" />
                {errors.seller_name && <p className="text-red-400 text-xs">{errors.seller_name.message}</p>}
             </div>
             <div className="space-y-2">
@@ -195,6 +253,7 @@ export default function YeniCihazPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Cihaz Bilgileri */}
         <Card className="glass-card">
@@ -225,6 +284,36 @@ export default function YeniCihazPage() {
               <Label htmlFor="model" className="text-white/80">Model *</Label>
               <Input id="model" {...register('model')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="iPhone 13 Pro" />
               {errors.model && <p className="text-red-400 text-xs">{errors.model.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/80">Hafıza (Storage) *</Label>
+              <Select onValueChange={(val) => setValue('storage', val, { shouldValidate: true })}>
+                <SelectTrigger className="bg-[#0f0f0f] border-[#222] text-white">
+                  <SelectValue placeholder="Seçiniz" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-[#222] text-white">
+                  <SelectItem value="64GB">64 GB</SelectItem>
+                  <SelectItem value="128GB">128 GB</SelectItem>
+                  <SelectItem value="256GB">256 GB</SelectItem>
+                  <SelectItem value="512GB">512 GB</SelectItem>
+                  <SelectItem value="1TB">1 TB</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.storage && <p className="text-red-400 text-xs">{errors.storage.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/80">Garanti Durumu *</Label>
+              <Select onValueChange={(val) => setValue('warranty_status', val, { shouldValidate: true })}>
+                <SelectTrigger className="bg-[#0f0f0f] border-[#222] text-white">
+                  <SelectValue placeholder="Seçiniz" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-[#222] text-white">
+                  <SelectItem value="Garantili (Kutulu/Faturalı)">Garantili (Kutulu/Faturalı)</SelectItem>
+                  <SelectItem value="Garantisi Bitmiş">Garantisi Bitmiş</SelectItem>
+                  <SelectItem value="Yurtdışı / Garantisiz">Yurtdışı / Garantisiz</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.warranty_status && <p className="text-red-400 text-xs">{errors.warranty_status.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="imei_1" className="text-white/80">IMEI 1 *</Label>
@@ -266,11 +355,25 @@ export default function YeniCihazPage() {
             <div className="space-y-2">
               <Label htmlFor="cosmetic_condition" className="text-white/80">Kozmetik Durum Özeti</Label>
               <Input id="cosmetic_condition" {...register('cosmetic_condition')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="Klavye, kasa yanlarında çizik..." />
+              <div className="flex flex-wrap gap-2 mt-2">
+                 {cosmeticPresets.map(preset => (
+                     <button type="button" key={preset} onClick={() => {
+                         const current = watchAllFields.cosmetic_condition || '';
+                         setValue('cosmetic_condition', current ? `${current}, ${preset}` : preset, { shouldValidate: true })
+                     }} className="text-xs bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded-md border border-white/10 transition-colors">
+                        {preset}
+                     </button>
+                 ))}
+              </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="purchase_price" className="text-white/80 text-emerald-400 font-bold">Alış Fiyatı (₺) *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="purchase_price" className="text-white/80 text-emerald-400 font-bold">Alış Fiyatı (₺) {isStoreDevice ? '*' : ''}</Label>
               <Input id="purchase_price" type="number" {...register('purchase_price')} className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 text-xl font-bold placeholder:text-emerald-400/20" placeholder="15000" />
               {errors.purchase_price && <p className="text-red-400 text-xs">{errors.purchase_price.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sale_price" className="text-white/80 text-amber-400 font-bold">Satış Fiyatı (₺) (Opsiyonel)</Label>
+              <Input id="sale_price" type="number" {...register('sale_price')} className="bg-amber-500/10 border-amber-500/30 text-amber-400 text-xl font-bold placeholder:text-amber-400/20" placeholder="Örn: 18000" />
             </div>
           </CardContent>
         </Card>
@@ -341,16 +444,17 @@ export default function YeniCihazPage() {
           <h3 style={{ borderBottom: '1px solid #ccc', paddingBottom: '5px', marginTop: '20px' }}>SATICI BİLGİLERİ (Satan Kişi)</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
             <tbody>
-              <tr><td style={{ padding: '8px', border: '1px solid #ccc', width: '30%', backgroundColor:'#f9f9f9' }}><strong>Ad Soyad:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.seller_name}</td></tr>
-              <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>T.C. Kimlik No:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.seller_tc}</td></tr>
-              <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>İletişim:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.seller_phone}</td></tr>
+              <tr><td style={{ padding: '8px', border: '1px solid #ccc', width: '30%', backgroundColor:'#f9f9f9' }}><strong>Tedarikçi Dükkan:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{isStoreDevice ? (shop?.default_store_name || shop?.name) : `${watchAllFields.seller_shop_name} ${watchAllFields.seller_name ? `(${watchAllFields.seller_name})` : ''}`}</td></tr>
+              <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>T.C. Kimlik No:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{isStoreDevice ? '-' : watchAllFields.seller_tc}</td></tr>
+              <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>İletişim:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{isStoreDevice ? '-' : watchAllFields.seller_phone}</td></tr>
             </tbody>
           </table>
 
           <h3 style={{ borderBottom: '1px solid #ccc', paddingBottom: '5px', marginTop: '20px' }}>CİHAZ BİLGİLERİ</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
             <tbody>
-              <tr><td style={{ padding: '8px', border: '1px solid #ccc', width: '30%', backgroundColor:'#f9f9f9' }}><strong>Marka / Model:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.brand} {watchAllFields.model}</td></tr>
+              <tr><td style={{ padding: '8px', border: '1px solid #ccc', width: '30%', backgroundColor:'#f9f9f9' }}><strong>Marka / Model:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.brand} {watchAllFields.model} ({watchAllFields.storage})</td></tr>
+              <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>Garanti / Kozmetik:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.warranty_status} | {watchAllFields.cosmetic_condition || 'Belirtilmedi'}</td></tr>
               <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>Cihaz Kökeni:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.device_origin}</td></tr>
               <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>IMEI 1:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.imei_1}</td></tr>
               <tr><td style={{ padding: '8px', border: '1px solid #ccc', backgroundColor:'#f9f9f9' }}><strong>IMEI 2:</strong></td><td style={{ padding: '8px', border: '1px solid #ccc' }}>{watchAllFields.imei_2 || '-'}</td></tr>
