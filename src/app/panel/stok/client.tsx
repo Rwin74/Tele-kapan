@@ -687,6 +687,8 @@ export default function StokClient({ initialData, isOwner, shopId }: { initialDa
         if(!open) setGalleryOpen(false)
       }}>
         <DialogContent className="max-w-4xl p-1 bg-black/95 border-[#222]">
+          <DialogTitle className="sr-only">Cihaz Görseli</DialogTitle>
+          <DialogDescription className="sr-only">Cihazın yüksek çözünürlüklü fotoğrafları arasında geçiş yapabilirsiniz.</DialogDescription>
           {galleryPhotos.length > 0 && (
             <div className="relative w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden">
                {galleryPhotos.length > 1 && (
