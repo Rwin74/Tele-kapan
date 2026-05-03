@@ -127,10 +127,6 @@ export default function YeniCihazPage() {
     // Custom Validation
     if (isStoreDevice) {
       if (!values.purchase_price) return toast.error('Mağaza cihazları için Alış Fiyatı zorunludur.')
-    } else {
-      if (!values.seller_shop_name) return toast.error('Dükkan adı zorunludur.')
-      if (!values.seller_tc || values.seller_tc.length !== 11) return toast.error('T.C. Kimlik No 11 hane olmak zorundadır.')
-      if (!values.seller_phone || values.seller_phone.length < 10) return toast.error('Geçerli bir telefon giriniz.')
     }
 
     setLoading(true)
@@ -232,7 +228,7 @@ export default function YeniCihazPage() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-               <Label htmlFor="seller_shop_name" className="text-white/80">Dükkan Adı *</Label>
+               <Label htmlFor="seller_shop_name" className="text-white/80">Dükkan Adı (Opsiyonel)</Label>
                <Input id="seller_shop_name" {...register('seller_shop_name')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="Örn: Ahmet İletişim" />
                {errors.seller_shop_name && <p className="text-red-400 text-xs">{errors.seller_shop_name.message}</p>}
             </div>
@@ -242,12 +238,12 @@ export default function YeniCihazPage() {
                {errors.seller_name && <p className="text-red-400 text-xs">{errors.seller_name.message}</p>}
             </div>
             <div className="space-y-2">
-               <Label htmlFor="seller_tc" className="text-white/80">T.C. Kimlik No *</Label>
+               <Label htmlFor="seller_tc" className="text-white/80">T.C. Kimlik No (Opsiyonel)</Label>
                <Input id="seller_tc" maxLength={11} {...register('seller_tc')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="11 Haneli" />
                {errors.seller_tc && <p className="text-red-400 text-xs">{errors.seller_tc.message}</p>}
             </div>
             <div className="space-y-2">
-               <Label htmlFor="seller_phone" className="text-white/80">Telefon *</Label>
+               <Label htmlFor="seller_phone" className="text-white/80">Telefon (Opsiyonel)</Label>
                <Input id="seller_phone" {...register('seller_phone')} className="bg-[#0f0f0f] border-[#222] text-white placeholder:text-white/20" placeholder="0555..." />
                {errors.seller_phone && <p className="text-red-400 text-xs">{errors.seller_phone.message}</p>}
             </div>

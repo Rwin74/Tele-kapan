@@ -18,10 +18,19 @@ export default function AyarlarPage() {
   const [useAsDefaultOwner, setUseAsDefaultOwner] = useState(shop?.use_as_default_owner || false)
   const [loadingSettings, setLoadingSettings] = useState(false)
 
+  // Mağaza Genel Bilgileri States
+  const [editMode, setEditMode] = useState(false)
+  const [mainShopName, setMainShopName] = useState(shop?.name || '')
+  const [taxInfo, setTaxInfo] = useState(shop?.tax_info || '')
+  const [address, setAddress] = useState(shop?.address || '')
+
   useEffect(() => {
     if (shop) {
       setDefaultStoreName(shop.default_store_name || '')
       setUseAsDefaultOwner(shop.use_as_default_owner || false)
+      setMainShopName(shop.name || '')
+      setTaxInfo(shop.tax_info || '')
+      setAddress(shop.address || '')
     }
   }, [shop])
 
@@ -79,6 +88,33 @@ export default function AyarlarPage() {
     }
   }
 
+  const saveMainSettings = async () => {
+    if (!shop?.id) return
+    setLoadingSettings(true)
+    const { error } = await supabase
+      .from('shops')
+      .update({
+        name: mainShopName,
+        tax_info: taxInfo,
+        address: address
+      })
+      .eq('id', shop.id)
+      
+    setLoadingSettings(false)
+    if (error) {
+      toast.error('Ayarlar güncellenemedi: ' + error.message)
+    } else {
+      toast.success('Mağaza bilgileri başarıyla kaydedildi.')
+      setShop({
+        ...shop,
+        name: mainShopName,
+        tax_info: taxInfo,
+        address: address
+      })
+      setEditMode(false)
+    }
+  }
+
   return (
     <div className="space-y-8 fade-in max-w-4xl">
       <div>
@@ -87,28 +123,40 @@ export default function AyarlarPage() {
       </div>
 
       <Card className="glass-card border-white/5">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Settings2 className="w-5 h-5 text-primary" />
-            Mağaza Bilgileri
-          </CardTitle>
-          <CardDescription className="text-white/50">Şirketinizin genel unvan ve adres detayları.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-primary" />
+              Mağaza Bilgileri
+            </CardTitle>
+            <CardDescription className="text-white/50">Şirketinizin genel unvan ve adres detayları.</CardDescription>
+          </div>
+          {isOwner && (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(!editMode)} className="bg-transparent text-white border-white/20">
+              {editMode ? 'İptal' : 'Düzenle'}
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <span className="text-white/50 block">Dükkan Adı</span>
-              <span className="text-white font-medium">{shop?.name}</span>
+              {editMode ? <input value={mainShopName} onChange={e => setMainShopName(e.target.value)} className="w-full bg-[#0f0f0f] border border-[#222] rounded px-2 py-1 text-white" /> : <span className="text-white font-medium">{shop?.name}</span>}
             </div>
             <div className="space-y-1">
               <span className="text-white/50 block">Vergi No / Daire</span>
-              <span className="text-white font-medium">{shop?.tax_info || 'Girilmemiş'}</span>
+              {editMode ? <input value={taxInfo} onChange={e => setTaxInfo(e.target.value)} className="w-full bg-[#0f0f0f] border border-[#222] rounded px-2 py-1 text-white" /> : <span className="text-white font-medium">{shop?.tax_info || 'Girilmemiş'}</span>}
             </div>
-            <div className="space-y-1 col-span-2">
+            <div className="space-y-1 col-span-1 sm:col-span-2">
               <span className="text-white/50 block">Adres</span>
-              <span className="text-white font-medium">{shop?.address || 'Girilmemiş'}</span>
+              {editMode ? <textarea value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-[#0f0f0f] border border-[#222] rounded px-2 py-1 text-white min-h-[60px]" /> : <span className="text-white font-medium">{shop?.address || 'Girilmemiş'}</span>}
             </div>
           </div>
+          {editMode && (
+             <Button onClick={saveMainSettings} disabled={loadingSettings} className="bg-primary hover:bg-primary/90 text-white mt-4">
+               {loadingSettings ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
+             </Button>
+          )}
         </CardContent>
       </Card>
 

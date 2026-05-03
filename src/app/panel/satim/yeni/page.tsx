@@ -109,7 +109,7 @@ export default function YeniSatisPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-black/90 border-white/10 text-white text-sm max-h-64">
                     {stockItems.map(item => (
-                      <SelectItem key={item.id} value={item.id} className="hover:bg-white/10 focus:bg-white/10">
+                      <SelectItem key={item.id} value={item.id} className="hover:bg-white/10 focus:bg-white/10 focus:text-white data-[state=checked]:text-white">
                         {item.brand} {item.model} - {item.imei_1} 
                         {(user?.role === 'owner' || user?.role === 'super_admin') && ` (Maliyet: ${item.total_cost}₺)`}
                       </SelectItem>
